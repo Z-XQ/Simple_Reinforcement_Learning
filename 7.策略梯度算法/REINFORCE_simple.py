@@ -111,7 +111,7 @@ class CartPoleTrainer:
 
             reward_sum = 0  # 初始化累计奖励
             # loss_sum = 0
-            for i in reversed(range(len(states))):
+            for i in reversed(range(len(states))):  # 更新模型参数，最大化采取states[i], actions[i]时的期望q值
                 # 2, q(si,ai)=reward_sum，近似动作价值，用于反向传播
                 reward_sum = reward_sum * 0.99 + rewards[i]
 
@@ -139,11 +139,12 @@ class CartPoleTrainer:
                 # 打印轮次与测试结果
                 print(f"Epoch: {epoch}, Test Reward: {val_result}")
 
-            """保存模型参数"""
-            if reward_sum > max_return:
-                max_return = reward_sum
-                torch.save(self.model.state_dict(), self.save_weight_path)
-                # print(f"模型已保存至: {self.save_weight_path}")
+
+                """保存模型参数"""
+                if val_result >= max_return:
+                    max_return = val_result
+                    torch.save(self.model.state_dict(), self.save_weight_path)
+                    # print(f"模型已保存至: {self.save_weight_path}")
 
     def val_episode(self):
         # 重置环境，随机一个初始状态
@@ -216,10 +217,10 @@ class CartPoleTester:
         return avg_reward
 
 if __name__ == "__main__":
-    # train
-    trainer = CartPoleTrainer(render_mode="rgb_array", max_steps=500, learning_rate=1e-3,
-                              save_weight_path="models/cartpole_reinforce.pth")
-    trainer.train()
+    # # train
+    # trainer = CartPoleTrainer(render_mode="rgb_array", max_steps=500, learning_rate=1e-3,
+    #                           save_weight_path="models/cartpole_reinforce.pth")
+    # trainer.train()
 
     # 使用训练好的模型进行测试
     tester = CartPoleTester(model_path="models/cartpole_reinforce.pth", render_mode='human')  # 'human'模式用于可视化

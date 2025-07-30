@@ -5,7 +5,6 @@ torch官方实现
 import gymnasium as gym
 import math
 import random
-import matplotlib.pyplot as plt
 from collections import namedtuple, deque
 from itertools import count
 import torch
@@ -36,6 +35,7 @@ class ReplayMemory(object):
 
     def __len__(self):
         return len(self.memory)
+
 
 class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
