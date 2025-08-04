@@ -18,7 +18,7 @@ Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state'
 # 类似于dataset
 class ReplayMemory(object):
     """
-    作用：存储历史交互经验，训练时随机采样批量数据，避免连续样本的相关性过高导致的训练不稳定。
+    作用：缓存有限个历史交互经验(s,a,r,s')，训练时随机采样批量数据，避免连续样本的相关性过高导致的训练不稳定。
     类比：相当于一个 "经验数据库"，push用于写入新经验，sample用于随机读取批量数据。
     队列存储全部的缓存，该队列最长是capacity个sample，超过则先进先出掉。
     通过push和sample入队和批量采样。
@@ -66,8 +66,8 @@ class CartPoleTrainer():
         self.env = gym.make('CartPole-v1')
 
         # 3. 双网络初始化（策略网络+目标网络）
-        n_observations = self.env.observation_space.shape[0]
-        self.n_actions = self.env.action_space.n
+        n_observations = self.env.observation_space.shape[0]  # Box:(4,)
+        self.n_actions = self.env.action_space.n  # Discrete(2)
 
         self.policy_net = DQN(n_observations, self.n_actions).to(self.device)  # “实时”更新的策略网络
         self.target_net = DQN(n_observations, self.n_actions).to(self.device)  # “定期”更新的目标网络
@@ -81,7 +81,7 @@ class CartPoleTrainer():
         # 5. 超参数定义
         self.BATCH_SIZE = 128
         self.GAMMA = 0.99        # 折扣因子（未来奖励的衰减系数）
-        self.TARGET_UPDATE = 10  # 目标网络更新频率（每10个episode更新一次）
+        self.TARGET_UPDATE_RATE = 10  # 目标网络更新频率（每10个episode更新一次）
 
         # eps-greedy
         self.steps_done = 0  # 累计步数（用于ε-贪婪策略的衰减）
@@ -95,9 +95,10 @@ class CartPoleTrainer():
 
     def select_action_eps_greedy(self, state):
         """
-        核心逻辑：实现ε-贪婪策略，平衡 "探索"（随机尝试新动作）和 "利用"（选择当前最优动作）：
+        eps-greedy: 大概率采用q值最大的action，小概率采取其他动作，平衡 "探索"（随机尝试新动作）和 "利用"（选择当前最优动作）：
+        前期重探索，后期重利用：
             初始阶段 ε=0.9（高探索率），优先尝试新动作；
-            随训练步数增加，ε逐渐衰减到 0.05（低探索率），逐渐依赖策略网络决策。
+            后期随训练步数增加，ε逐渐衰减到 0.05（低探索率），逐渐依赖策略网络决策。
         Args:
         input:
             state: array. (4,)
@@ -207,7 +208,7 @@ class CartPoleTrainer():
                     torch.save(self.policy_net.state_dict(), self.model_path)
 
             # 4. 定期目标网络异步更新
-            if i_episode % self.TARGET_UPDATE == 0:
+            if i_episode % self.TARGET_UPDATE_RATE == 0:
                 self.target_net.load_state_dict(self.policy_net.state_dict())
                 # print(f"Target network updated at episode {i_episode}")
 
