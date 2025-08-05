@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+from torch.nn import init
 from tqdm import tqdm
 
 """与之前功能一致，用namedtuple定义强化学习中一次完整交互的经验（状态、动作、下一状态、奖励），
@@ -22,6 +23,7 @@ class ReplayMemory(object):
     类比：相当于一个 "经验数据库"，push用于写入新经验，sample用于随机读取批量数据。
     队列存储全部的缓存，该队列最长是capacity个sample，超过则先进先出掉。
     通过push和sample入队和批量采样。
+    注意：随着迭代的进行，先前较短的episode会逐渐出队
     """
     def __init__(self, capacity):
         # 预先申请空间。第一个参数 []：初始化一个空队列（也可以传入初始元素列表，如 deque([t1,t2,t3], ...)）。
@@ -115,7 +117,7 @@ class CartPoleTrainer():
         p = random.random()
         if p > eps:  # 利用：选择当前Q值最大的动作
             with torch.no_grad():  # 不计算梯度（节省资源）
-                q_val = self.policy_net(state_tensor)
+                q_val = self.policy_net(state_tensor)  # (1, 4) -> (1, 2)
                 action = torch.argmax(q_val, dim=1).item()  # 策略网络输出Q值，取最大值对应的动作索引
         else:  # 探索：随机选择动作，所以随机某个概率是eps*1/n
             action = random.choices(range(self.n_actions), k=1)[0]
@@ -136,9 +138,9 @@ class CartPoleTrainer():
         transitions = self.memory.sample(self.BATCH_SIZE)  # list of Transition
         batch = Transition(*zip(*transitions))  # zip(*transitions) 等价于 zip(t1, t2): [(s1, s2), (a1, a2),(ns1, ns2),(r1, r2) ]
         # 拼接批量数据（状态、动作、奖励）
-        state_batch = torch.cat(batch.state)  # list.(1,4) -> (128,4)
-        action_batch = torch.cat(batch.action)  # list. (1,1) -> (128,1)
-        reward_batch = torch.cat(batch.reward)  # list. (1,) -> (128,)
+        state_batch = torch.cat(batch.state)  # tuple of tensor(1,4) -> (128, 4)
+        action_batch = torch.cat(batch.action)  # tuple of tensor(1,1) -> (128, 1)
+        reward_batch = torch.cat(batch.reward)  # tuple of tensor(1,) -> (128, )
 
         # 2. 计算预测Q值=net(s)：当前状态下，实际选择的动作对应的Q值 s(128,4)->q(128,2)->q(128,1) gather在指定维度 dim 上，根据 index 中的索引值，提取对应位置的元素。
         state_action_values = self.policy_net(state_batch).gather(dim=1, index=action_batch)
@@ -203,7 +205,7 @@ class CartPoleTrainer():
                 # val
                 val_result = sum([self.val_episode() for i in range(10)]) / 10
                 print("average return on val: {}".format(val_result))
-                if val_result > max_reward:
+                if val_result >= max_reward:
                     max_reward = val_result
                     torch.save(self.policy_net.state_dict(), self.model_path)
 

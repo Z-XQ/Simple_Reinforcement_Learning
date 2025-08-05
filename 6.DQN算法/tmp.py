@@ -42,7 +42,6 @@ class DQN(nn.Module):
         self.layer = nn.Sequential(
             nn.Linear(n_states, 128), nn.ReLU(),
             nn.Linear(128, 128), nn.ReLU(),
-            nn.Linear(128, 128), nn.ReLU(),
             nn.Linear(128, n_actions)
         )
 
@@ -95,10 +94,9 @@ class CartPoleTrainer(object):
         state_tensor = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
         # eps
         eps = self.EPS_END + (self.EPS_START-self.EPS_END) * math.exp(-1.0 * self.step_done / self.EPS_DECAY)
-        #
+
         self.step_done += 1
         p = random.random()
-
         if p > eps:
             with torch.no_grad():
                 q_val = self.policy_net(state_tensor)  # (b,2)
@@ -124,7 +122,7 @@ class CartPoleTrainer(object):
                 # (4, ) ->(1, 4)
                 state_tensor = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
                 # int -> (1, 1)
-                action_tensor = torch.tensor([action], dtype=torch.long, device=self.device).reshape(1, 1)
+                action_tensor = torch.tensor([action], dtype=torch.long, device=self.device).view(1, 1)
                 # float -> (1, )
                 reward_tensor = torch.tensor([reward], dtype=torch.float32, device=self.device)
                 # (4, ) ->(1, 4)
@@ -145,7 +143,7 @@ class CartPoleTrainer(object):
                 # val
                 val_result = sum([self.val_episode() for i in range(10)]) / 10
                 print("average return on val: {}".format(val_result))
-                if val_result > max_reward:
+                if val_result >= max_reward:
                     max_reward = val_result
                     torch.save(self.policy_net.state_dict(), self.model_path)
 
@@ -166,6 +164,7 @@ class CartPoleTrainer(object):
         # 获取batch data
         if len(self.memory) < self.BATCH_SIZE:
             return
+
         batch_data = self.memory.sample(self.BATCH_SIZE)  # list.
         # zip(*batch_data) = zip(t1, t2, t3): [(s1,s2,s3), (a1,a2,a3), (r1,r2,r3), (s'1,s'2,s'3)]
         batch = Transition(*zip(*batch_data))
@@ -221,6 +220,7 @@ class CartPoleTrainer(object):
             q_val = self.policy_net(state)
         action = torch.argmax(q_val).item()  # 选择q值最高的动作
         return action
+
 
 class CartPoleTester:
     def __init__(self, model_path="models/dqn.pth", render_mode="human"):
@@ -282,8 +282,8 @@ class CartPoleTester:
 
 
 if __name__ == '__main__':
-    # trainer = CartPoleTrainer()
-    # trainer.train()
+    trainer = CartPoleTrainer()
+    trainer.train()
 
     tester = CartPoleTester(model_path="models/123.pth")
     tester.test()
