@@ -1,16 +1,27 @@
+  0%|          | 1/1500 [00:01<44:39,  1.79s/it]average return on val: 9.5
+  7%|▋         | 100/1500 [00:05<01:00, 22.98it/s]average return on val: 9.2
+ 13%|█▎        | 201/1500 [00:10<01:05, 19.84it/s]average return on val: 9.6
+ 20%|██        | 301/1500 [00:34<17:11,  1.16it/s]average return on val: 123.2
+ 27%|██▋       | 401/1500 [01:46<16:40,  1.10it/s]average return on val: 180.4
+ 33%|███▎      | 501/1500 [02:55<11:48,  1.41it/s]average return on val: 125.8
+ 40%|████      | 601/1500 [03:49<10:35,  1.41it/s]average return on val: 157.5
+ 47%|████▋     | 701/1500 [04:59<09:46,  1.36it/s]average return on val: 159.3
+ 53%|█████▎    | 801/1500 [05:55<09:08,  1.27it/s]average return on val: 170.0
+ 60%|██████    | 901/1500 [07:25<11:05,  1.11s/it]average return on val: 190.7
+ 67%|██████▋   | 1001/1500 [09:11<14:31,  1.75s/it]average return on val: 307.8
+ 73%|███████▎  | 1101/1500 [12:04<19:01,  2.86s/it]average return on val: 500.0
+ 80%|████████  | 1201/1500 [15:47<14:18,  2.87s/it]average return on val: 500.0
+ 87%|████████▋ | 1301/1500 [19:31<09:30,  2.87s/it]average return on val: 496.3
+ 93%|█████████▎| 1401/1500 [22:52<04:43,  2.87s/it]average return on val: 500.0
+100%|██████████| 1500/1500 [26:31<00:00,  1.06s/it]
+训练完成
 Using GPU: NVIDIA GeForce RTX 2060 with 1 GPUs
-  0%|          | 1/1500 [00:01<45:59,  1.84s/it]average return on val: 16.4
-  7%|▋         | 101/1500 [00:06<01:23, 16.82it/s]average return on val: 15.2
- 13%|█▎        | 201/1500 [00:25<14:14,  1.52it/s]average return on val: 135.5
- 20%|██        | 301/1500 [01:30<16:12,  1.23it/s]average return on val: 170.3
- 27%|██▋       | 401/1500 [02:27<12:42,  1.44it/s]average return on val: 137.8
- 33%|███▎      | 501/1500 [03:28<13:25,  1.24it/s]average return on val: 167.7
- 40%|████      | 601/1500 [04:25<09:47,  1.53it/s]average return on val: 140.9
- 47%|████▋     | 701/1500 [05:25<08:34,  1.55it/s]average return on val: 102.7
- 53%|█████▎    | 801/1500 [06:35<12:19,  1.06s/it]average return on val: 174.7
- 60%|██████    | 901/1500 [07:38<07:16,  1.37it/s]average return on val: 139.4
- 67%|██████▋   | 1001/1500 [08:32<06:18,  1.32it/s]average return on val: 144.2
- 73%|███████▎  | 1101/1500 [09:33<06:03,  1.10it/s]average return on val: 172.5
- 80%|████████  | 1201/1500 [11:22<13:13,  2.65s/it]average return on val: 500.0
- 87%|████████▋ | 1301/1500 [13:56<08:36,  2.59s/it]average return on val: 500.0
- 93%|█████████▎| 1401/1500 [17:02<04:15,  2.58s/it]average return on val: 500.0
+
+开始测试，共运行 5 局...
+第 1 局结束，奖励: 500.0
+第 2 局结束，奖励: 500.0
+第 3 局结束，奖励: 500.0
+第 4 局结束，奖励: 500.0
+第 5 局结束，奖励: 500.0
+
+测试完成，平均奖励: 500.00
