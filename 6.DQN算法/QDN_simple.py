@@ -8,8 +8,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from torch.nn import init
 from tqdm import tqdm
+
 
 """与之前功能一致，用namedtuple定义强化学习中一次完整交互的经验（状态、动作、下一状态、奖励），
 支持通过字段名访问（如transition.state），提升可读性。"""
@@ -78,7 +78,7 @@ class CartPoleTrainer():
 
         # 4. 设置优化器(amsgrad稳定学习率，避免过早衰减)与经验回放缓冲区
         self.optimizer = optim.AdamW(self.policy_net.parameters(), lr=1e-4, amsgrad=True)
-        self.memory = ReplayMemory(10000)
+        self.memory = ReplayMemory(100000)
 
         # 5. 超参数定义
         self.BATCH_SIZE = 128
@@ -89,7 +89,7 @@ class CartPoleTrainer():
         self.steps_done = 0  # 累计步数（用于ε-贪婪策略的衰减）
         self.EPS_START = 0.9     # ε-贪婪策略初始探索率
         self.EPS_END = 0.05      # ε-贪婪策略最终探索率
-        self.EPS_DECAY = 1000    # ε衰减速度
+        self.EPS_DECAY = 10000    # ε衰减速度
 
         self.model_path = model_path
         save_dir = os.path.dirname(model_path)
@@ -135,7 +135,8 @@ class CartPoleTrainer():
             return
 
         # 1. 随机采样一批经验, 转换为batch批量数据（按字段分组）
-        transitions = self.memory.sample(self.BATCH_SIZE)  # list of Transition
+        transitions = self.memory.sample(self.BATCH_SIZE)  # list of Transition: [t1, t2, t3]
+        #  [t1, t2, t3] ->Transition { s=[s1,s2,s3], a=[a1,a2,a3], r=[r1,r2,r3], s'=[s'1,s'2,s'3]}
         batch = Transition(*zip(*transitions))  # zip(*transitions) 等价于 zip(t1, t2): [(s1, s2), (a1, a2),(ns1, ns2),(r1, r2) ]
         # 拼接批量数据（状态、动作、奖励）
         state_batch = torch.cat(batch.state)  # tuple of tensor(1,4) -> (128, 4)
@@ -159,6 +160,7 @@ class CartPoleTrainer():
         # 4. 计算损失并优化
         criterion = nn.SmoothL1Loss()
         loss = criterion(state_action_values, expected_state_action_values.unsqueeze(1))
+        # print(loss.item())
 
         self.optimizer.zero_grad()   # 清空梯度
         loss.backward()  # 反向传播计算梯度
@@ -168,7 +170,7 @@ class CartPoleTrainer():
     def train(self):
         # 训练过程
         max_reward = 0
-        for i_episode in tqdm(range(1500)):  # 1500个episode
+        for i_episode in tqdm(range(3000)):  # 1500个episode
             # 单个episode过程：生成one sample (s,a,r,s')，缓存起来，计算梯度，进行实时更新主网络，定期更新目标网络
             state, _ = self.env.reset()
             over = False

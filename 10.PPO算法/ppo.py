@@ -20,7 +20,7 @@ class ActorCritic(nn.Module):
         super(ActorCritic, self).__init__()
 
         # 共享的特征提取层
-        self.shared = nn.Sequential(
+        self.shared_layer = nn.Sequential(
             nn.Linear(state_dim, hidden_dim),
             nn.Tanh(),
             nn.Linear(hidden_dim, hidden_dim),
@@ -34,9 +34,9 @@ class ActorCritic(nn.Module):
         self.critic = nn.Linear(hidden_dim, 1)
 
     def forward(self, state):
-        x = self.shared(state)
-        logits = self.actor(x)
-        value = self.critic(x)
+        x = self.shared_layer(state)  # (4, ) -> (64, )
+        logits = self.actor(x)  # (64, ) -> (2, )
+        value = self.critic(x)  # (64, ) -> (1, )
         return logits, value
 
     def get_action(self, state):
@@ -129,7 +129,7 @@ def train_ppo(env_name="CartPole-v1", max_episodes=300, max_timesteps=1000,
               batch_size=512, print_interval=10):
     # 创建环境
     env = gym.make(env_name)
-    env.seed(seed)
+    # env.seed(seed)
 
     # 获取状态和动作维度
     state_dim = env.observation_space.shape[0]
@@ -213,7 +213,7 @@ def train_ppo(env_name="CartPole-v1", max_episodes=300, max_timesteps=1000,
 
 
 # 训练并绘制结果
-scores = train_ppo()
+scores = train_ppo(max_episodes=3000)
 
 # 绘制奖励曲线
 plt.figure(figsize=(10, 6))
