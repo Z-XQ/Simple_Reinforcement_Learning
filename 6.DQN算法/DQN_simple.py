@@ -196,7 +196,7 @@ class CartPoleTrainer():
                     next_state_tensor = None
                 self.memory.push(state_tensor, action_tensor, reward_tensor, next_state_tensor)
 
-                # next iteration
+                # 注意：next iteration
                 state = next_state
 
                 # 3. 计算梯度，进行实时更新主网络
