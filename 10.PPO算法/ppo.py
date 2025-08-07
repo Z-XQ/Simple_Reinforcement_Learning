@@ -16,6 +16,10 @@ np.random.seed(seed)
 
 # 定义Actor-Critic网络
 class ActorCritic(nn.Module):
+    """
+    Actor: p=net(s) 输出动作概率分布
+    Critic: v=net(s) 输出状态价值
+    """
     def __init__(self, state_dim, action_dim, hidden_dim=64):
         super(ActorCritic, self).__init__()
 
@@ -35,12 +39,13 @@ class ActorCritic(nn.Module):
 
     def forward(self, state):
         """
-
+        Actor: p=net(s) 输出动作概率分布
+        Critic: v=net(s) 输出状态价值
         Args:
             state: tensor. (4,).代表某个状态s
-
-        Returns: 返回某个状态出发，所有动作的概率、状态价值
-
+        Returns:
+            logits: tensor. (2,). raw prob. 所有动作的概率
+            value: tensor. (1,). 状态价值v(s)
         """
         x = self.shared_layer(state)  # (4, ) -> (64, )
         logits = self.actor(x)  # (64, ) -> (2, ) 未归一化的动作概率分数（也叫 “对数几率”）
@@ -52,9 +57,10 @@ class ActorCritic(nn.Module):
         概率高的动作被选中的可能性更大，同时保留一定的探索性。
         Args:
             state: tensor. (4, ). 输入状态s
-
-        Returns: int, action. log_prob. v(s)
-
+        Returns:
+            action: int. 0/1
+            action: float. log_prob.
+            value: float. v(s) 状态价值
         """
         # 获得动作和对应的对数概率、状态价值
         logits, value = self.forward(state)
@@ -110,17 +116,19 @@ class PPO:
             # 1. 计算TD误差（Temporal Difference Error）
             # 公式：delta_t = r_t + γ * V(s_{t+1}) * (1-done_t) - V(s_t)
             # 这是 “一步 TD 误差”，衡量 “当前价值估计V(s_t)” 与 “基于即时奖励和下一状态价值的估计” 之间的差距。
-            td_target = rewards[t] + self.gamma * next_value * (1 - dones[t])
-            delta = td_target - values[t]  # TD error
+            delta = rewards[t] + self.gamma * next_value * (1 - dones[t]) - values[t]  # TD error
             next_value = values[t]  # 更新"下一个状态的价值"（因为是反向迭代，下一轮要处理t-1，此时t的价值就是t-1的"下一个价值"）
 
             # 2. 累积优势（GAE的核心）
             # 公式：A_t = delta_t + γ*λ * A_{t+1} * (1-done_t)
             advantage = delta + self.gamma * self.gae_lambda * advantage * (1 - dones[t])
 
-            # 3. 将当前优势和回报插入列表开头（保持时间顺序）
+            # 3. 回报 = 优势 + 价值（因为优势的定义A_t = Q_t - V(s_t)，而Q_t是理论值）
+            return_val = advantage + values[t]
+
+            # 4. 将当前优势和回报插入列表开头（保持时间顺序）
             advantages.insert(0, advantage)
-            returns.insert(0, advantage + values[t])  # 回报 = 优势 + 价值（因为A_t = R_t - V(s_t)）
+            returns.insert(0, return_val)
 
         # 标准化优势，提高训练稳定性（可选但重要，避免不同量级的优势干扰训练）
         advantages = np.array(advantages)
@@ -193,7 +201,7 @@ def train_ppo(env_name="CartPole-v1", max_episodes=300, max_timesteps=1000,
         if isinstance(state, tuple):  # 处理gym 0.26+的返回格式变化
             state = state[0]
 
-        # 存储一个batch的数据
+        # 存储同属于一个episode的一个batch的数据
         states, actions, log_probs, rewards, values, dones = [], [], [], [], [], []
         score_episode = 0
 
