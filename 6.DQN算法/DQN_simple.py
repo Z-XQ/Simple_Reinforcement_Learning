@@ -113,7 +113,7 @@ class CartPoleTrainer():
         # 计算当前ε值（随步数指数衰减）
         eps = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(-1. * self.steps_done / self.EPS_DECAY)
 
-        self.steps_done += 1
+        self.steps_done += 1  # 注意：这里容易忘记
         p = random.random()
         if p > eps:  # 利用：选择当前Q值最大的动作
             with torch.no_grad():  # 不计算梯度（节省资源）
@@ -135,22 +135,22 @@ class CartPoleTrainer():
             return
 
         # 1. 随机采样一批经验, 转换为batch批量数据（按字段分组）
-        transitions = self.memory.sample(self.BATCH_SIZE)  # list of Transition: [t1, t2, t3]
-        #  [t1, t2, t3] ->Transition { s=[s1,s2,s3], a=[a1,a2,a3], r=[r1,r2,r3], s'=[s'1,s'2,s'3]}
-        batch = Transition(*zip(*transitions))  # zip(*transitions) 等价于 zip(t1, t2): [(s1, s2), (a1, a2),(ns1, ns2),(r1, r2) ]
+        batch_data = self.memory.sample(self.BATCH_SIZE)  # list of Transition: [t1, t2, t3]
+        # [t1, t2, t3] -> Transition(state=[s1,s2,s3], action=[a1,a2,a3], [r1,r2,r3], [s'1,s'2,s'3])
+        transition = Transition(*zip(*batch_data))  # zip(*transitions) 等价于 zip(t1, t2): [(s1, s2), (a1, a2),(ns1, ns2),(r1, r2) ]
         # 拼接批量数据（状态、动作、奖励）
-        state_batch = torch.cat(batch.state)  # tuple of tensor(1,4) -> (128, 4)
-        action_batch = torch.cat(batch.action)  # tuple of tensor(1,1) -> (128, 1)
-        reward_batch = torch.cat(batch.reward)  # tuple of tensor(1,) -> (128, )
+        state_batch = torch.cat(transition.state)  # tuple of tensor(1,4) -> (128, 4)
+        action_batch = torch.cat(transition.action)  # tuple of tensor(1,1) -> (128, 1)
+        reward_batch = torch.cat(transition.reward)  # tuple of tensor(1,) -> (128, )
 
         # 2. 计算预测Q值=net(s)：当前状态下，实际选择的动作对应的Q值 s(128,4)->q(128,2)->q(128,1) gather在指定维度 dim 上，根据 index 中的索引值，提取对应位置的元素。
         state_action_values = self.policy_net(state_batch).gather(dim=1, index=action_batch)
 
         # 3. 计算目标Q值：基于目标网络的下一状态最大Q值（贝尔曼方程）: r + max(net(s'), dim=1)
         # 处理非终结状态（下一个状态存在的情况）即(s,a,r,s'=None)不参与训练。 tensor.shape=(128,)
-        non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, batch.next_state)), device=self.device,
+        non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, transition.next_state)), device=self.device,
                                       dtype=torch.bool)
-        non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])  # (122,4)
+        non_final_next_states = torch.cat([s for s in transition.next_state if s is not None])  # (122,4)
         next_state_values = torch.zeros(self.BATCH_SIZE, device=self.device)  # 终结状态的目标 Q 值为0：从该状态出发，不会再有任何后续动作或奖励
         with torch.no_grad():
             # next_state_values[non_final_mask].shape=(122,) 对应 non_final_next_states.shape=(122,4), 只计算非终结状态的目标Q值
