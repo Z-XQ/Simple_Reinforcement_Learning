@@ -1,0 +1,26 @@
+D:\anaconda3\envs\gymna\python.exe D:\code\python\Simple_Reinforcement_Learning\10.PPO算法\ppo算法_平衡车.py
+  0%|          | 0/1000 [00:00<?, ?it/s]D:\code\python\Simple_Reinforcement_Learning\10.PPO算法\ppo算法_平衡车.py:112: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\utils\tensor_new.cpp:257.)
+  states = torch.FloatTensor(states).reshape(-1, 4)  # [b, 4]
+0 28.1
+  5%|▌         | 51/1000 [00:03<01:21, 11.64it/s]50 245.0
+ 10%|█         | 100/1000 [00:07<01:12, 12.38it/s]100 463.3
+ 15%|█▌        | 150/1000 [00:10<00:44, 18.91it/s]150 312.8
+ 20%|██        | 201/1000 [00:16<02:23,  5.58it/s]200 482.8
+ 25%|██▌       | 251/1000 [00:20<02:11,  5.70it/s]250 452.7
+ 30%|███       | 301/1000 [00:25<02:16,  5.12it/s]300 500.0
+ 35%|███▌      | 351/1000 [00:31<01:55,  5.61it/s]350 450.2
+ 40%|████      | 401/1000 [00:37<02:24,  4.15it/s]400 500.0
+ 45%|████▌     | 450/1000 [00:42<00:47, 11.47it/s]450 500.0
+ 50%|█████     | 501/1000 [00:49<01:50,  4.50it/s]500 500.0
+ 55%|█████▌    | 551/1000 [00:55<01:24,  5.29it/s]550 500.0
+ 60%|██████    | 601/1000 [01:00<01:14,  5.38it/s]600 500.0
+ 65%|██████▌   | 651/1000 [01:05<01:05,  5.35it/s]650 500.0
+ 70%|███████   | 701/1000 [01:11<00:55,  5.35it/s]700 500.0
+ 75%|███████▌  | 751/1000 [01:16<00:47,  5.22it/s]750 500.0
+ 80%|████████  | 801/1000 [01:22<00:57,  3.44it/s]800 500.0
+ 85%|████████▌ | 851/1000 [01:28<00:43,  3.43it/s]850 500.0
+ 90%|█████████ | 900/1000 [01:33<00:09, 10.37it/s]900 500.0
+ 95%|█████████▌| 950/1000 [01:39<00:04, 11.35it/s]950 500.0
+100%|██████████| 1000/1000 [01:45<00:00,  9.49it/s]
+
+Process finished with exit code 0

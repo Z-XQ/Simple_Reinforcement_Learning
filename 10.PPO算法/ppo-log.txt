@@ -1,0 +1,31 @@
+  0%|          | 6/3000 [00:00<01:50, 27.04it/s]average return on val: 9.7
+  4%|▎         | 105/3000 [00:04<01:53, 25.54it/s]average return on val: 24.2
+  7%|▋         | 203/3000 [00:09<03:57, 11.77it/s]average return on val: 139.5
+ 10%|█         | 301/3000 [00:16<04:35,  9.80it/s]average return on val: 113.3
+ 13%|█▎        | 402/3000 [00:25<05:00,  8.65it/s]average return on val: 68.3
+ 17%|█▋        | 502/3000 [00:36<05:57,  6.99it/s]average return on val: 216.0
+ 20%|██        | 601/3000 [00:47<05:11,  7.70it/s]average return on val: 141.5
+ 23%|██▎       | 702/3000 [00:59<07:42,  4.97it/s]average return on val: 237.8
+ 27%|██▋       | 802/3000 [01:13<07:44,  4.73it/s]average return on val: 183.5
+ 30%|███       | 902/3000 [01:28<06:13,  5.62it/s]average return on val: 153.3
+ 33%|███▎      | 1001/3000 [01:45<13:30,  2.47it/s]average return on val: 500.0
+ 37%|███▋      | 1101/3000 [02:03<13:00,  2.43it/s]average return on val: 500.0
+ 40%|████      | 1201/3000 [02:21<10:40,  2.81it/s]average return on val: 500.0
+ 43%|████▎     | 1301/3000 [02:40<13:11,  2.15it/s]average return on val: 500.0
+ 47%|████▋     | 1401/3000 [03:00<08:57,  2.97it/s]average return on val: 203.1
+ 50%|█████     | 1501/3000 [03:24<11:47,  2.12it/s]average return on val: 500.0
+ 53%|█████▎    | 1601/3000 [03:48<11:51,  1.97it/s]average return on val: 500.0
+ 57%|█████▋    | 1702/3000 [04:13<09:59,  2.17it/s]average return on val: 500.0
+ 60%|██████    | 1801/3000 [04:39<09:02,  2.21it/s]average return on val: 500.0
+ 63%|██████▎   | 1901/3000 [05:07<09:05,  2.01it/s]average return on val: 500.0
+ 67%|██████▋   | 2001/3000 [05:35<09:16,  1.80it/s]average return on val: 500.0
+ 70%|███████   | 2101/3000 [06:03<06:05,  2.46it/s]average return on val: 500.0
+ 73%|███████▎  | 2201/3000 [06:30<05:45,  2.31it/s]average return on val: 500.0
+ 77%|███████▋  | 2302/3000 [06:59<04:09,  2.80it/s]average return on val: 500.0
+ 80%|████████  | 2401/3000 [07:27<04:46,  2.09it/s]average return on val: 500.0
+ 83%|████████▎ | 2502/3000 [07:56<03:13,  2.58it/s]average return on val: 500.0
+ 87%|████████▋ | 2601/3000 [08:23<04:21,  1.53it/s]average return on val: 500.0
+ 90%|█████████ | 2702/3000 [08:51<02:07,  2.34it/s]average return on val: 500.0
+ 93%|█████████▎| 2801/3000 [09:17<01:33,  2.13it/s]average return on val: 500.0
+ 97%|█████████▋| 2901/3000 [09:44<00:35,  2.77it/s]average return on val: 500.0
+100%|██████████| 3000/3000 [10:11<00:00,  4.90it/s]

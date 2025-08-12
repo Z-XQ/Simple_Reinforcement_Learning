@@ -3,11 +3,22 @@ from collections import deque
 import torch
 import torch.nn as nn
 import gymnasium as gym
-from torch.distributions import Categorical
+from torch.distributions import Categorical  # 别导入错了
 
 import numpy as np
 import torch.nn.functional as F
+from tqdm import tqdm
 
+"""
+PPO: on-policy
+actor-critic net:
+actor: p = actor_net(s)
+critic: v = critic_net(s)  # 预计的gt，折扣return
+
+policy loss: policy_loss = -min(rA, clip(r)A)
+value loss: value_loss = mse(gt, critic_net(s))
+entropy loss: h = -sum(p*log(p)), p = actor_net(s)
+"""
 
 # ac网络模型
 class ActorCritic(nn.Module):
@@ -34,15 +45,15 @@ class ActorCritic(nn.Module):
         Actor: p=net(s) 输出动作概率分布
         Critic: v=net(s) 输出状态价值
         Args:
-            state: tensor. (4,)
+            state: c
         Returns:
             logits: tensor. (2,). raw prob. 所有动作的概率
-            value: tensor. (1,). 状态价值v(s)
+            value: tensor. (1,). 严格意义来说是状态s的折扣return
         """
         x = self.shared_layer(state)  # (4,) -> (64,)
         logits_p = self.actor(x)  # (64,) -> (2,)
-        s_value = self.critic(x)    # (64,) -> (1,)
-        return logits_p, s_value
+        s_gt = self.critic(x)    # (64,) -> (1,)
+        return logits_p, s_gt
 
     def get_action(self, state):
         """
@@ -53,17 +64,17 @@ class ActorCritic(nn.Module):
             state: tensor. (4,)
         Returns:
             action: int. 0/1
-            log_prob(a): float. log_prob. 选取动作对应的log概率
-            value: float. v(s) 状态价值
+            log_prob(a): tensor. log_prob. 选取动作对应的log概率
+            value: float. v(s) s的折扣return
         """
         # 1. value
-        logits, s_value = self.forward(state)
+        logits, s_gt = self.forward(state)
 
         # 2. action, log_prob
         distribution = Categorical(logits=logits)  # 内部会用"softmax"将logits转为概率. 对象。
         action = distribution.sample()  # 从这个分布中采样一个动作（按照概率分布，不是直接选最大概率）
         log_prob = distribution.log_prob(action)  # 计算这个采样动作在当前分布下的对数概率
-        return action.item(), log_prob, s_value.item()
+        return action.item(), log_prob, s_gt.item()
 
 
 class CartPoleTrainer(object):
@@ -92,9 +103,9 @@ class CartPoleTrainer(object):
 
     def compute_gae(self, rewards, values, dones, next_value):
         """
+        输入: 同一个episode数据
         计算广义优势估计(GAE)、或者折扣回报也行。
         GAE：TD误差的加权和, 平衡偏差与方差。
-        输入: 同一个episode数据
         Args:
             rewards: list of float. 时间步t到T-1的即时奖励列表（[r_t, r_{t+1}, ..., r_{T-1}]）
             values:  list of float. 时间步t到T-1的状态价值（[V(s_t), V(s_{t+1}), ..., V(s_{T-1})]）
@@ -130,17 +141,13 @@ class CartPoleTrainer(object):
         return advantages, returns
 
     def train(self):
-        # 记录训练过程中的奖励
-        scores = []  # 打印
-        scores_window = deque(maxlen=100)  # 打印 用于计算最近100个episode的平均奖励
-
+        max_reward = 0
         # 主训练循环
-        for episode in range(3000):
+        for episode in tqdm(range(3000)):
             state, _ = self.env.reset()
 
             # 存储同属于一个episode的一个batch的数据
             states, actions, log_probs, rewards, values, dones = [], [], [], [], [], []
-            score_episode = 0  # 打印
             done = False
             while not done:
                 # 选择动作，此动作的log_prob，此状态价值
@@ -168,24 +175,18 @@ class CartPoleTrainer(object):
 
                 # next 更新状态和分数
                 state = next_state
-                score_episode += reward
                 if done:
                     break
 
-            # 记录奖励
-            scores.append(score_episode)
-            scores_window.append(score_episode)
+                # score_episode += reward
 
-            # 打印训练进度
-            if episode % 10 == 0:
-                print(f"Episode {episode}\tAverage Score: {np.mean(scores_window):.2f}")
-
-            # 如果连续100个episode的平均奖励达到475，认为解决了问题
-            if np.mean(scores_window) >= 475:
-                print(
-                    f"\nEnvironment solved in {episode - 100:d} episodes!\tAverage Score: {np.mean(scores_window):.2f}")
-                torch.save(self.ac_model.state_dict(), "ppo_cartpole.pth")
-                break
+            if episode % 100 == 0:
+                # val
+                val_result = sum([self.val_episode() for i in range(10)]) / 10
+                print("average return on val: {}".format(val_result))
+                if val_result >= max_reward:
+                    max_reward = val_result
+                    # torch.save(self.ac_model.state_dict(), "models/123.pth")
 
     def train_episode(self, states, actions, log_probs, rewards, values, dones, next_state):
         """
@@ -232,7 +233,7 @@ class CartPoleTrainer(object):
 
             # 计算当前策略的对数概率和熵
             log_probs = dist.log_prob(actions)  # actions(18,) log_probs(18,)
-            entropy = dist.entropy().mean()  # tensor(0.6)
+            entropy = dist.entropy().mean()  # tensor(0.6) 熵衡量的是策略的随机性 / 不确定性：
 
             # 计算新旧策略的概率比值e^p_new / e^p_old
             ratio = torch.exp(log_probs - old_log_probs)  # (18,)
@@ -253,6 +254,28 @@ class CartPoleTrainer(object):
             total_loss.backward()
             self.optimizer.step()
 
+    def val_episode(self):
+        # 重置环境，随机一个初始状态
+        state, info = self.env.reset()
+        reward_sum = 0  # 计算总分，走一步没结束则加一分
+        over = False
+        while not over:
+            # 输出策略
+            action = self.get_action_by_max_p(state)
+            # 交互
+            state, reward, terminated, truncated, info = self.env.step(action)
+            reward_sum += reward
+            # next
+            over = terminated or truncated
+
+        return reward_sum
+
+    def get_action_by_max_p(self, state):
+        state = torch.tensor(state, dtype=torch.float32).reshape(1, 4)
+        with torch.no_grad():  # 测试时不需要计算梯度
+            raw_p, s_gt = self.ac_model(state)
+        action = torch.argmax(raw_p).item()  # 选择q值最高的动作
+        return action
 
 if __name__ == '__main__':
     trainer = CartPoleTrainer()
