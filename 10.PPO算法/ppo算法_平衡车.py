@@ -5,6 +5,14 @@ import torch.nn as nn
 from tqdm import tqdm
 
 
+"""
+Actor: p = actor_net(s)
+Critic: v = critic_net(s) 状态价值
+policy_loss: loss = -min(rA, clip(r)A), A = A*0.98*0.95 + delta, delta = r+0.98*critic_net(s') - critic_net(s)
+critic_loss: loss = mse(r+critic_net(s') - critic_net(s))
+"""
+
+
 #定义模型
 class Actor(nn.Module):
     def __init__(self, state_dim, action_dim):
@@ -18,11 +26,11 @@ class Actor(nn.Module):
     def forward(self, state):
         """
         Args:
-            state: tensor. (4, )
+            state: tensor. (1, 4)
         Returns:
             actor: p = actor_net(s)
         """
-        p = self.layer(state)  # (4, ) -> (2, )
+        p = self.layer(state)  # (1, 4) -> (1, 2)
         return p
 
 
@@ -37,11 +45,11 @@ class Critic(nn.Module):
     def forward(self, state):
         """
         Args:
-            state: tensor. (4, )
+            state: tensor. (1, 4)
         Returns:
             actor: val = net(s)
         """
-        p = self.layer(state)  # (4, ) -> (1, )
+        p = self.layer(state)  # (1, 4) -> (1, 1)
         return p
 
 
