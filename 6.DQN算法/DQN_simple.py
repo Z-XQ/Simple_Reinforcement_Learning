@@ -11,6 +11,12 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 
+"""
+(1) 两个网络，都是输入s，输出q值，计算两者q差值，q=main_net(s), q = r + max(target_net(s))
+(2) ReplayMemory, batch data train, batch个时刻的数据;
+(3) on-policy
+"""
+
 """与之前功能一致，用namedtuple定义强化学习中一次完整交互的经验（状态、动作、下一状态、奖励），
 支持通过字段名访问（如transition.state），提升可读性。"""
 Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state'))
@@ -50,6 +56,14 @@ class DQN(nn.Module):
         self.layer3 = nn.Linear(128, n_actions)
 
     def forward(self, x):
+        """
+        q = net(s)
+        Args:
+            x: (1, 4)
+
+        Returns: q = net(s). (1,2)
+
+        """
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         return self.layer3(x)

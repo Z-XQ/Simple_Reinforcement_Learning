@@ -71,9 +71,10 @@ class CartPoleTrainer(object):
         self.GAMMA = 0.98
         self.LAMBDA = 0.95
 
-    # 优势函数
+    # 优势函数 gae
     def get_advantages(self, deltas):
         """
+        GAE 的本质：多步 TD 误差的指数加权和。
         inputs: episode内部每个状态的td error
         outputs: A是td error的加权和
         """
